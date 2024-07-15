@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批量修改节点端口</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    color: #007BFF;
+    margin: 20px 0;
+  }
+  .container {
+    margin-bottom: 20px;
+  }
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  label {
+    margin-bottom: 5px;
+  }
+  input[type="text"], input[type="number"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 400px;
+    margin-bottom: 10px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 10px;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  #node-result {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+    word-break: break-all;
+    margin: 20px auto;
+    white-space: pre-wrap; /* 保留换行 */
+  }
+</style>
+</head>
+<body>
+  <h1>批量修改节点端口</h1>
+  <div class="input-container">
+    <label for="original-node">原始节点：</label>
+    <input type="text" id="original-node" placeholder="例：socks://dXNlcmI6cGFzc3dvcmRi@166.0.198.173:20025#B">
+  </div>
+  <div class="input-container">
+    <label for="start-port">起始端口：</label>
+    <input type="number" id="start-port" min="1" placeholder="例：1000">
+  </div>
+  <div class="input-container">
+    <label for="end-port">结束端口：</label>
+    <input type="number" id="end-port" min="1" placeholder="例：1010">
+  </div>
+  <div class="container">
+    <button onclick="generateNodes()">生成节点</button>
+    <button onclick="copyToClipboard()">复制到剪切板</button>
+  </div>
+  <div id="node-result"></div>
+
+  <script>
+    function generateNodes() {
+      const originalNodeInput = document.getElementById('original-node').value;
+      const startPort = parseInt(document.getElementById('start-port').value);
+      const endPort = parseInt(document.getElementById('end-port').value);
+      const resultArea = document.getElementById('node-result');
+      resultArea.innerHTML = '';
+
+      // 验证输入的原始节点格式
+      const nodePattern = /^socks:\/\/.+@.+:\d+#.*$/;
+      if (!nodePattern.test(originalNodeInput)) {
+        alert('请输入有效的原始节点，例如：socks://dXNlcmI6cGFzc3dvcmRi@123.111.111.111:20025#B');
+        return;
+      }
+
+      if (isNaN(startPort) || isNaN(endPort) || startPort > endPort) {
+        alert('请输入有效的起始和结束端口');
+        return;
+      }
+
+      // 分割节点地址
+      const [protocolUserPass, ipPortRemark] = originalNodeInput.split('@');
+      const [ipPort, remark] = ipPortRemark.split('#');
+      const ipAddress = ipPort.split(':')[0];
+
+      let nodes = '';
+      for (let port = startPort; port <= endPort; port++) {
+        const newNode = `${protocolUserPass}@${ipAddress}:${port}#${remark}`;
+        nodes += newNode + '\n';
+      }
+      resultArea.textContent = nodes.trim();
+    }
+
+    function copyToClipboard() {
+      const resultArea = document.getElementById('node-result');
+      const text = resultArea.textContent;
+
+      if (!text) {
+        alert('没有内容可复制，请先生成节点。');
+        return;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('内容已复制到剪切板。');
+      }).catch(err => {
+        alert('复制失败，请重试。');
+      });
+    }
+  </script>
+</body>
+</html>
